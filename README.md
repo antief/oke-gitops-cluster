@@ -1,119 +1,86 @@
-# OKE GitOps Template
+# OKE Cluster
 
-Bootstrap a small Oracle Kubernetes Engine cluster with OpenTofu and Flux.
+This is my personal Kubernetes cluster on Oracle Kubernetes Engine.
 
-The template creates OCI infrastructure, bootstraps Flux, and installs a practical Kubernetes baseline: Envoy Gateway, ExternalDNS, cert-manager, External Secrets Operator, Longhorn, kube-prometheus-stack, Loki, Grafana Alloy, metrics-server, and a `whoami` test app.
+The cluster is based on my reusable OKE GitOps template:
 
-It is meant to get a new cluster running from code. After bootstrap, keep, change, or remove the defaults to fit your own environment.
+https://github.com/antief/oke-gitops-template
 
-## What you provide
+## What runs here
 
-- OCI CLI profile, usually the `DEFAULT` profile from [`oci setup config`](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliconfigure.htm)
-- an OCI [compartment](https://docs.oracle.com/en-us/iaas/Content/Identity/compartments/managingcompartments.htm) for the cluster. A dedicated child compartment is recommended, but root tenancy can also be used in a personal tenancy
-- an OCI user/API key with permission to create the required OCI resources. See [API signing keys](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm) and [common IAM policies](https://docs.oracle.com/en-us/iaas/Content/Identity/Concepts/commonpolicies.htm)
-- OCI [Customer Secret Key](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingcredentials.htm) for the OpenTofu state backend
-- GitHub token with read/write access to your new repository
-- Cloudflare DNS token for your zone
-- a Cloudflare-managed DNS zone
+The cluster provides a small but complete cloud-native baseline:
 
-The template creates the state bucket if it is missing, then creates the network, OKE cluster, Vault, KMS key, IAM resources, Flux, and Kubernetes components.
+- Oracle Kubernetes Engine on OCI
+- OpenTofu-managed infrastructure
+- Flux CD for GitOps reconciliation
+- Envoy Gateway for public ingress
+- OCI Network Load Balancer for external traffic
+- Gateway API for routing
+- cert-manager with Cloudflare DNS-01 for TLS certificates
+- ExternalDNS for Cloudflare DNS records
+- External Secrets Operator with OCI Vault
+- Longhorn for persistent storage
+- kube-prometheus-stack for monitoring
+- Loki and Alloy for logs
+- `whoami` as a public smoke-test workload
 
-## Tools
+The goal is to keep the cluster small, rebuildable, and understandable while still using patterns common in larger Kubernetes environments.
 
-Install:
+## How it works
 
-- `git`
-- `oci`
-- `tofu`
-- `kubectl`
-- `flux`
-- `just`
-- `direnv`
-- `gh` for the optional pull request helper
+Infrastructure is managed with OpenTofu. The repository separates long-lived foundation resources from the rebuildable OKE cluster layer, so the cluster can be destroyed and recreated without recreating every supporting resource.
 
-Configure OCI CLI:
+Flux watches `main` and reconciles the Kubernetes manifests under `gitops/`.
 
-```bash
-oci setup config
-```
-
-## Quick start
-
-Create a repository from this template, clone it, and fill in `.env`:
-
-```bash
-cp .env.example .env
-$EDITOR .env
-```
-
-Then run:
-
-```bash
-just init
-just validate
-just apply
-```
-
-`just init` writes local configuration from `.env`, creates the state bucket if needed, and initializes the OpenTofu backends.
-
-`just validate` checks local files, OCI access, and OpenTofu plans.
-
-`just apply` creates the foundation resources, OKE cluster, kubeconfig, Flux bootstrap, and GitOps roots.
-
-## Smoke test
-
-```bash
-flux get kustomizations -A
-kubectl get nodes
-curl -k -I https://whoami.<your-domain>/
-```
-
-For a fuller check, including Prometheus and Loki smoke tests, see [Operations](docs/operations.md).
-
-## Main commands
-
-```bash
-just init       # generate local config and initialize backends
-just validate   # check local setup and plans
-just plan       # show OpenTofu changes
-just apply      # create or update foundation, OKE, and Flux
-just destroy    # destroy Flux and OKE, keep foundation
-just rebuild    # destroy + apply
-```
-
-Use `just destroy` for rebuild testing. Use [Full uninstall](docs/uninstall.md) only when you want to remove everything, including Vault, KMS, and state.
-
-## Development workflow
-
-For repositories with branch protection enabled, use the pull request helper after making a change:
-
-```bash
-just pr my-change "docs: describe my change"
-```
-
-The helper creates a branch if needed, commits current changes, opens a pull request, and enables auto-merge. It requires the GitHub CLI (`gh`) to be installed and authenticated.
-
-## Repository layout
-
-The repository has OpenTofu stacks under `terraform/` and Flux manifests under `gitops/`. See [Architecture](docs/architecture.md) for details.
-
-## Local files
-
-`.env` is the only file you edit by hand. Do not commit it.
-
-Generated files are local only:
+Public traffic follows this path:
 
 ```text
-terraform/.envrc
-terraform/*/backend.hcl
-terraform/*/terraform.tfvars
-terraform/*/secrets.auto.tfvars
-terraform/*/.terraform/
+Internet
+  -> OCI Network Load Balancer
+  -> Envoy Gateway
+  -> Gateway API routes
+  -> Kubernetes Services
+  -> application Pods
 ```
 
-## Documentation
+Runtime secret material is stored in OCI Vault and synced into Kubernetes with External Secrets Operator.
 
-- [Configuration](docs/configuration.md)
-- [Operations](docs/operations.md)
-- [Architecture](docs/architecture.md)
-- [Full uninstall](docs/uninstall.md)
+## Reliability model
+
+The ingress dataplane is designed to survive normal node-level disruption.
+
+Envoy runs as a public dataplane on the cluster nodes, while application workloads can be scaled across nodes depending on the workload. This makes it possible to test rolling changes, node cycling, and rebuild workflows with minimal manual recovery.
+
+This is a small personal environment, not a fully automated production platform.
+
+## Helper commands
+
+The repository includes a `justfile` to keep common workflows short and repeatable.
+
+The most useful commands are:
+
+```bash
+just validate   # check local setup, ignored secrets, OCI access, and plans
+just plan       # show OpenTofu changes
+just apply      # create or update the cluster baseline
+just destroy    # destroy Flux and OKE, keep long-lived foundation resources
+just rebuild    # destroy + apply
+just pr branch-name "type(scope): message"
+```
+
+These commands are convenience wrappers around OpenTofu, Flux, GitHub CLI, and local validation scripts. The detailed bootstrap workflow is documented in the template repository.
+
+## Layout
+
+```text
+terraform/foundation   Persistent OCI foundation resources
+terraform/oci-oke      Rebuildable OKE infrastructure
+terraform/flux         Flux bootstrap and root ownership
+gitops/                Flux-managed Kubernetes manifests
+```
+
+## Reference
+
+Detailed bootstrap, configuration, credential, and uninstall documentation is kept in the template repository instead of duplicating it here:
+
+[oke-gitops-template](https://github.com/antief/oke-gitops-template)
