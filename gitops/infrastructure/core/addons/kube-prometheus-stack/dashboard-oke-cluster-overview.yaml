@@ -457,7 +457,7 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "Allocatable CPU",
+                "title": "CPU alloc.",
                 "type": "stat"
             },
             {
@@ -524,7 +524,7 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "Memory capacity",
+                "title": "Memory total",
                 "type": "stat"
             },
             {
@@ -591,7 +591,7 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "Allocatable memory",
+                "title": "Memory alloc.",
                 "type": "stat"
             },
             {
@@ -747,6 +747,14 @@ data:
                                 {
                                     "color": "green",
                                     "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 80
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 95
                                 }
                             ]
                         },
@@ -792,7 +800,7 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "CPU requested",
+                "title": "CPU requests",
                 "type": "stat"
             },
             {
@@ -814,6 +822,14 @@ data:
                                 {
                                     "color": "green",
                                     "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 80
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 95
                                 }
                             ]
                         },
@@ -859,7 +875,7 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "Memory requested",
+                "title": "Memory requests",
                 "type": "stat"
             },
             {
@@ -1060,7 +1076,7 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "Available replicas",
+                "title": "Avail. replicas",
                 "type": "stat"
             },
             {
@@ -1082,6 +1098,14 @@ data:
                                 {
                                     "color": "green",
                                     "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 1
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 3
                                 }
                             ]
                         },
@@ -1127,7 +1151,7 @@ data:
                         "refId": "A"
                     }
                 ],
-                "title": "Unavailable replicas",
+                "title": "Unavailable",
                 "type": "stat"
             },
             {
@@ -1149,6 +1173,14 @@ data:
                                 {
                                     "color": "green",
                                     "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 1
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 3
                                 }
                             ]
                         },
@@ -1216,6 +1248,14 @@ data:
                                 {
                                     "color": "green",
                                     "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 1
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 3
                                 }
                             ]
                         },
@@ -1283,6 +1323,14 @@ data:
                                 {
                                     "color": "green",
                                     "value": null
+                                },
+                                {
+                                    "color": "yellow",
+                                    "value": 1
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 5
                                 }
                             ]
                         },
@@ -2005,6 +2053,6 @@ data:
         "timezone": "browser",
         "title": "OKE Cluster Overview",
         "uid": "oke-cluster-overview",
-        "version": 2,
+        "version": 3,
         "weekStart": ""
     }
