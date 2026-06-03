@@ -88,7 +88,7 @@ spec:
           cookie_secure: true
           cookie_samesite: strict
         dashboards:
-          min_refresh_interval: 1m
+          min_refresh_interval: 5m
         feature_toggles:
           enable: publicDashboards
       persistence:
@@ -100,11 +100,11 @@ spec:
         size: 1Gi
       resources:
         requests:
-          cpu: 25m
-          memory: 128Mi
+          cpu: 50m
+          memory: 256Mi
         limits:
-          cpu: 200m
-          memory: 384Mi
+          cpu: 500m
+          memory: 768Mi
       sidecar:
         dashboards:
           enabled: true
