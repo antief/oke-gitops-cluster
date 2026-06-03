@@ -33,7 +33,7 @@ data:
       ],
       "panels": [
         {
-          "description": "Curated public-safe overview of the Oracle Kubernetes Engine cluster. This dashboard intentionally avoids logs, Explore access, secrets, internal application details and ad-hoc query access.",
+          "description": "Curated public-safe overview of the Oracle Kubernetes Engine cluster.",
           "fieldConfig": {
             "defaults": {},
             "overrides": []
@@ -51,7 +51,7 @@ data:
               "showLineNumbers": false,
               "showMiniMap": false
             },
-            "content": "## OKE Cluster Overview\n\nRead-only public-safe overview of the Oracle Kubernetes Engine cluster. The dashboard focuses on availability, capacity and GitOps-friendly operational signals. Logs, ad-hoc datasource access, node IPs and PVC-level storage names are intentionally not exposed.",
+            "content": "## OKE Cluster Overview\n\nCurated public-safe overview of the Oracle Kubernetes Engine cluster.",
             "mode": "markdown"
           },
           "pluginVersion": "12.0.0",
@@ -331,7 +331,7 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Cluster-wide CPU usage percentage aggregated across nodes. Per-node labels are intentionally not shown on the public dashboard.",
+          "description": "Cluster-wide CPU usage percentage aggregated across nodes.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -429,7 +429,7 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Cluster-wide memory usage percentage aggregated across nodes. Per-node labels are intentionally not shown on the public dashboard.",
+          "description": "Cluster-wide memory usage percentage aggregated across nodes.",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -625,7 +625,7 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "description": "Cluster-wide PVC usage percentage. PVC names are intentionally not shown on the public dashboard.",
+          "description": "Cluster-wide persistent volume usage percentage.",
           "fieldConfig": {
             "defaults": {
               "color": {
