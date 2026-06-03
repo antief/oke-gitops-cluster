@@ -22,7 +22,7 @@ spec:
           automountServiceAccountToken: false
           containers:
             - name: heartbeat
-              image: curlimages/curl:8.11.1
+              image: docker.io/curlimages/curl:8.11.1
               imagePullPolicy: IfNotPresent
               env:
                 - name: HEARTBEAT_URL
@@ -49,6 +49,8 @@ spec:
                     - ALL
                 readOnlyRootFilesystem: true
                 runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
           securityContext:
             seccompProfile:
               type: RuntimeDefault
