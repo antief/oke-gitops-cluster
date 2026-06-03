@@ -148,3 +148,9 @@ variable "cluster_name" {
   type        = string
   default     = "oke-cluster"
 }
+
+variable "betterstack_heartbeat_k8s_secret_name" {
+  description = "Kubernetes Secret name containing the Better Stack heartbeat URL"
+  type        = string
+  default     = "betterstack-heartbeat-secret"
+}

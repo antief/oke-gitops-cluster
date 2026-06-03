@@ -37,7 +37,8 @@ data "terraform_remote_state" "foundation" {
 }
 
 locals {
-  cluster_id                       = data.terraform_remote_state.oci_oke.outputs.cluster_id
-  foundation_vault_id              = data.terraform_remote_state.foundation.outputs.vault_id
-  cloudflare_api_token_secret_name = data.terraform_remote_state.foundation.outputs.cloudflare_api_token_secret_name
+  cluster_id                             = data.terraform_remote_state.oci_oke.outputs.cluster_id
+  foundation_vault_id                    = data.terraform_remote_state.foundation.outputs.vault_id
+  cloudflare_api_token_secret_name       = data.terraform_remote_state.foundation.outputs.cloudflare_api_token_secret_name
+  betterstack_heartbeat_url_secret_name = try(data.terraform_remote_state.foundation.outputs.betterstack_heartbeat_url_secret_name, "betterstack-heartbeat-url")
 }

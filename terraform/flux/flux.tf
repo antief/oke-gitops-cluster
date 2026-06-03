@@ -81,9 +81,10 @@ resource "kubernetes_config_map_v1" "flux_cluster_vars" {
   }
 
   data = {
-    OCI_REGION                       = var.region
-    OCI_VAULT_ID                     = local.foundation_vault_id
-    CLOUDFLARE_API_TOKEN_SECRET_NAME = local.cloudflare_api_token_secret_name
+    OCI_REGION                            = var.region
+    OCI_VAULT_ID                          = local.foundation_vault_id
+    CLOUDFLARE_API_TOKEN_SECRET_NAME      = local.cloudflare_api_token_secret_name
+    BETTERSTACK_HEARTBEAT_URL_SECRET_NAME = local.betterstack_heartbeat_url_secret_name
 
     cluster_name = var.cluster_name
 
@@ -92,7 +93,8 @@ resource "kubernetes_config_map_v1" "flux_cluster_vars" {
     WHOAMI_HOSTNAME                      = "whoami.${var.base_domain}"
     EXTERNAL_DNS_TXT_OWNER_ID            = var.external_dns_txt_owner_id
     GATEWAY_TLS_SECRET_NAME              = var.gateway_tls_secret_name
-    CLOUDFLARE_API_TOKEN_K8S_SECRET_NAME = var.cloudflare_api_token_k8s_secret_name
+    CLOUDFLARE_API_TOKEN_K8S_SECRET_NAME  = var.cloudflare_api_token_k8s_secret_name
+    BETTERSTACK_HEARTBEAT_K8S_SECRET_NAME = var.betterstack_heartbeat_k8s_secret_name
   }
 }
 

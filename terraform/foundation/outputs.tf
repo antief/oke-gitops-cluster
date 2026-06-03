@@ -31,3 +31,13 @@ output "vault_key_id" {
   description = "OCI Vault KMS key OCID"
   value       = oci_kms_key.secrets.id
 }
+
+output "betterstack_heartbeat_url_secret_id" {
+  description = "OCI Vault secret OCID for the Better Stack heartbeat URL"
+  value       = oci_vault_secret.betterstack_heartbeat_url.id
+}
+
+output "betterstack_heartbeat_url_secret_name" {
+  description = "OCI Vault secret name used by External Secrets Operator for the Better Stack heartbeat URL"
+  value       = var.betterstack_heartbeat_url_secret_name
+}

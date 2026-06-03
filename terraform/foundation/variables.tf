@@ -67,3 +67,17 @@ variable "cloudflare_api_token_secret_name" {
   type        = string
   default     = "cloudflare-api-token"
 }
+
+# External uptime monitoring
+
+variable "betterstack_heartbeat_url" {
+  description = "Better Stack heartbeat URL stored in OCI Vault and synced into Kubernetes for the in-cluster heartbeat CronJob"
+  type        = string
+  sensitive   = true
+}
+
+variable "betterstack_heartbeat_url_secret_name" {
+  description = "OCI Vault secret name for the Better Stack heartbeat URL"
+  type        = string
+  default     = "betterstack-heartbeat-url"
+}
