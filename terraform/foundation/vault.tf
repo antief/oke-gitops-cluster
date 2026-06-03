@@ -53,3 +53,18 @@ resource "oci_vault_secret" "cloudflare_api_token" {
 
   freeform_tags = local.common_tags
 }
+
+resource "oci_vault_secret" "betterstack_heartbeat_url" {
+  compartment_id = var.compartment_ocid
+  secret_name    = var.betterstack_heartbeat_url_secret_name
+  vault_id       = oci_kms_vault.secrets.id
+  key_id         = oci_kms_key.secrets.id
+
+  secret_content {
+    content_type = "BASE64"
+    content      = base64encode(var.betterstack_heartbeat_url)
+    stage        = "CURRENT"
+  }
+
+  freeform_tags = local.common_tags
+}

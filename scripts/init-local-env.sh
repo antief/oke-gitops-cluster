@@ -124,6 +124,7 @@ required_vars=(
   BASE_DOMAIN
   LETSENCRYPT_EMAIL
   CLOUDFLARE_API_TOKEN
+  BETTERSTACK_HEARTBEAT_URL
 )
 
 missing=0
@@ -178,6 +179,7 @@ GATEWAY_TLS_SECRET_NAME="${GATEWAY_TLS_SECRET_NAME:-${DOMAIN_SLUG}-tls}"
 VAULT_DISPLAY_NAME="${VAULT_DISPLAY_NAME:-${CLUSTER_SLUG}-vault}"
 VAULT_KEY_DISPLAY_NAME="${VAULT_KEY_DISPLAY_NAME:-${CLUSTER_SLUG}-secrets-key}"
 CLOUDFLARE_API_TOKEN_SECRET_NAME="${CLOUDFLARE_API_TOKEN_SECRET_NAME:-cloudflare-api-token}"
+BETTERSTACK_HEARTBEAT_URL_SECRET_NAME="${BETTERSTACK_HEARTBEAT_URL_SECRET_NAME:-betterstack-heartbeat-url}"
 
 hcl_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -262,7 +264,8 @@ write_backend oci-oke "${TOFU_STATE_PREFIX}/terraform.tfstate"
 write_backend flux "${TOFU_STATE_PREFIX}/flux.tfstate"
 
 write_oci_secrets foundation "
-cloudflare_api_token = \"$(hcl_escape "$CLOUDFLARE_API_TOKEN")\""
+cloudflare_api_token       = \"$(hcl_escape "$CLOUDFLARE_API_TOKEN")\"
+betterstack_heartbeat_url = \"$(hcl_escape "$BETTERSTACK_HEARTBEAT_URL")\""
 write_oci_secrets oci-oke
 write_file "terraform/flux/secrets.auto.tfvars" "tenancy_ocid     = \"$(hcl_escape "$OCI_TENANCY_OCID")\"
 user_ocid        = \"$(hcl_escape "$OCI_USER_OCID")\"
@@ -271,10 +274,11 @@ private_key_path = \"$(hcl_escape "$PRIVATE_KEY_PATH")\"
 region           = \"$(hcl_escape "$OCI_REGION")\"
 github_token     = \"$(hcl_escape "$GITHUB_TOKEN")\""
 
-write_file "terraform/foundation/terraform.tfvars" "vault_display_name                 = \"$(hcl_escape "$VAULT_DISPLAY_NAME")\"
-vault_key_display_name             = \"$(hcl_escape "$VAULT_KEY_DISPLAY_NAME")\"
-cloudflare_api_token_secret_name   = \"$(hcl_escape "$CLOUDFLARE_API_TOKEN_SECRET_NAME")\"
-vault_store_cloudflare_api_token   = true"
+write_file "terraform/foundation/terraform.tfvars" "vault_display_name                     = \"$(hcl_escape "$VAULT_DISPLAY_NAME")\"
+vault_key_display_name                 = \"$(hcl_escape "$VAULT_KEY_DISPLAY_NAME")\"
+cloudflare_api_token_secret_name       = \"$(hcl_escape "$CLOUDFLARE_API_TOKEN_SECRET_NAME")\"
+betterstack_heartbeat_url_secret_name = \"$(hcl_escape "$BETTERSTACK_HEARTBEAT_URL_SECRET_NAME")\"
+vault_store_cloudflare_api_token       = true"
 
 write_file "terraform/oci-oke/terraform.tfvars" "cluster_name                  = \"$(hcl_escape "$CLUSTER_NAME")\"
 node_pool_name                = \"$(hcl_escape "$NODE_POOL_NAME")\"

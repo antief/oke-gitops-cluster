@@ -22,6 +22,7 @@ The cluster provides a small but complete cloud-native baseline:
 - Longhorn for persistent storage
 - kube-prometheus-stack for monitoring
 - Loki and Alloy for logs
+- Better Stack heartbeat from inside the cluster
 - `whoami` as a public smoke-test workload
 
 The goal is to keep the cluster small, rebuildable, and understandable while still using patterns common in larger Kubernetes environments.
@@ -52,6 +53,18 @@ The ingress dataplane is designed to survive normal node-level disruption.
 Envoy runs as a public dataplane on the cluster nodes, while application workloads can be scaled across nodes depending on the workload. This makes it possible to test rolling changes, node cycling, and rebuild workflows with minimal manual recovery.
 
 This is a small personal environment, not a fully automated production platform.
+
+## External uptime monitoring
+
+Public availability is monitored outside the cluster with Better Stack. The status page and HTTP checks are configured in Better Stack, while this repository manages the in-cluster heartbeat CronJob.
+
+The heartbeat URL is runtime secret material. Store it locally in `.env` and let `scripts/init-local-env.sh` render the ignored OpenTofu variable files:
+
+```dotenv
+BETTERSTACK_HEARTBEAT_URL="https://uptime.betterstack.com/api/v1/heartbeat/..."
+```
+
+Flux then reconciles an ExternalSecret and a small CronJob under `uptime-monitoring`. The CronJob checks in every five minutes, so Better Stack can detect cases where the cluster can no longer run scheduled workloads or reach the internet.
 
 ## Helper commands
 
