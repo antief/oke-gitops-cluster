@@ -22,6 +22,7 @@ spec:
           automountServiceAccountToken: false
           containers:
             - name: heartbeat
+              # renovate: datasource=docker depName=curlimages/curl
               image: docker.io/curlimages/curl:8.11.1
               imagePullPolicy: IfNotPresent
               env:

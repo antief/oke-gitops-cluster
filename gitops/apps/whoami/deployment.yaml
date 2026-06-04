@@ -19,6 +19,7 @@ spec:
       labels:
         app: whoami
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: whoami
           # renovate: datasource=docker depName=traefik/whoami
