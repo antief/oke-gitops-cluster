@@ -13,6 +13,7 @@ DRY_RUN=false
 FORCE=false
 NO_TERRAFORM_OUTPUTS=false
 SKIP_IMAGE_CHECK=false
+AUTO_CLEAN_LONGHORN_STALE=true
 
 usage() {
   cat <<'USAGE'
@@ -34,6 +35,7 @@ Options:
   --target-image-id <ocid>    Target node image OCID. If the node pool API does not expose
                               per-node image IDs, the script reads them from Compute instances.
   --skip-image-check          Ignore node image differences. Useful with restricted OCI policies.
+  --no-longhorn-cleanup       Do not clean stale Longhorn replicas/nodes left by replaced nodes
   --force                     Replace all ACTIVE nodes, even if they look current
   --dry-run                   Print what would be replaced, but do not delete nodes
   --grace-duration <iso8601>  OKE eviction grace duration. Default: PT30M
@@ -43,7 +45,7 @@ Options:
 
 Environment variables with the same names are also supported:
   NODE_POOL_ID, TARGET_K8S_VERSION, TARGET_IMAGE_ID, GRACE_DURATION,
-  WAIT_SECONDS, WAIT_INTERVAL_SECONDS, STATE_DIR
+  WAIT_SECONDS, WAIT_INTERVAL_SECONDS, STATE_DIR, AUTO_CLEAN_LONGHORN_STALE
 
 Examples:
   tofu apply
@@ -68,6 +70,7 @@ while [[ $# -gt 0 ]]; do
     --dry-run) DRY_RUN=true; shift ;;
     --force) FORCE=true; shift ;;
     --skip-image-check) SKIP_IMAGE_CHECK=true; shift ;;
+    --no-longhorn-cleanup) AUTO_CLEAN_LONGHORN_STALE=false; shift ;;
     --no-terraform-outputs) NO_TERRAFORM_OUTPUTS=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "Unknown argument: $1" ;;
@@ -300,6 +303,120 @@ longhorn_available() {
   kubectl get crd volumes.longhorn.io replicas.longhorn.io nodes.longhorn.io >/dev/null 2>&1 || return 1
 }
 
+
+longhorn_node_ready_from_json() {
+  local nodes_json="$1"
+  local name="$2"
+
+  printf '%s' "$nodes_json" | jq -e --arg name "$name" '
+    .items[]?
+    | select(.metadata.name == $name)
+    | .status.conditions[]?
+    | select(.type == "Ready" and .status == "True")
+  ' >/dev/null
+}
+
+longhorn_volume_healthy_from_json() {
+  local volumes_json="$1"
+  local volume="$2"
+
+  printf '%s' "$volumes_json" | jq -e --arg volume "$volume" '
+    .items[]?
+    | select(.metadata.name == $volume)
+    | select((.status.robustness // "") == "healthy")
+  ' >/dev/null
+}
+
+longhorn_engine_count_for_node() {
+  local node="$1"
+
+  kubectl -n longhorn-system get engines.longhorn.io -o json 2>/dev/null \
+    | jq -r --arg node "$node" '
+        [
+          .items[]?
+          | select((.spec.nodeID // "") == $node)
+        ] | length
+      '
+}
+
+longhorn_replica_count_for_node() {
+  local node="$1"
+
+  kubectl -n longhorn-system get replicas.longhorn.io -o json 2>/dev/null \
+    | jq -r --arg node "$node" '
+        [
+          .items[]?
+          | select((.spec.nodeID // "") == $node)
+        ] | length
+      '
+}
+
+cleanup_stale_longhorn_nodes() {
+  [[ "$AUTO_CLEAN_LONGHORN_STALE" == true ]] || return 0
+  longhorn_available || return 0
+
+  local volumes_json replicas_json nodes_json
+  volumes_json="$(kubectl -n longhorn-system get volumes.longhorn.io -o json)"
+  replicas_json="$(kubectl -n longhorn-system get replicas.longhorn.io -o json)"
+  nodes_json="$(kubectl -n longhorn-system get nodes.longhorn.io -o json)"
+
+  local lh_node
+  while IFS= read -r lh_node; do
+    [[ -n "$lh_node" ]] || continue
+
+    # Only touch Longhorn nodes that no longer exist as Kubernetes nodes.
+    kubectl get node "$lh_node" >/dev/null 2>&1 && continue
+
+    # Do not clean a Longhorn node that still reports Ready. That would be
+    # unexpected when the Kubernetes node is already gone.
+    if longhorn_node_ready_from_json "$nodes_json" "$lh_node"; then
+      warn "Longhorn node $lh_node is Ready but the Kubernetes node is missing; leaving it untouched"
+      continue
+    fi
+
+    local replica_name volume_name replica_state replica_failed_at
+    while IFS=$'\t' read -r replica_name volume_name replica_state replica_failed_at; do
+      [[ -n "$replica_name" && -n "$volume_name" ]] || continue
+
+      # Delete only stale failed/stopped replicas whose volume has already
+      # returned to healthy. During rebuild/degraded phases these replicas are
+      # intentionally left alone and the normal health wait keeps blocking.
+      if [[ "$replica_state" == "stopped" || -n "$replica_failed_at" ]]; then
+        if longhorn_volume_healthy_from_json "$volumes_json" "$volume_name"; then
+          log "Deleting stale Longhorn replica $replica_name on removed node $lh_node; volume $volume_name is healthy"
+          kubectl -n longhorn-system delete replicas.longhorn.io "$replica_name" --ignore-not-found=true
+        fi
+      fi
+    done < <(
+      printf '%s' "$replicas_json" | jq -r --arg node "$lh_node" '
+        .items[]?
+        | select((.spec.nodeID // "") == $node)
+        | [
+            .metadata.name,
+            (.spec.volumeName // ""),
+            (.status.currentState // ""),
+            (.spec.failedAt // .status.failedAt // "")
+          ]
+        | @tsv
+      '
+    )
+
+    local remaining_replicas engine_count
+    remaining_replicas="$(longhorn_replica_count_for_node "$lh_node")"
+    engine_count="$(longhorn_engine_count_for_node "$lh_node")"
+
+    if [[ "$remaining_replicas" -eq 0 && "$engine_count" -eq 0 ]]; then
+      log "Removing stale Longhorn node $lh_node after Kubernetes node removal"
+      kubectl -n longhorn-system patch nodes.longhorn.io "$lh_node" \
+        --type=merge \
+        -p '{"spec":{"allowScheduling":false}}' >/dev/null 2>&1 || true
+      kubectl -n longhorn-system delete nodes.longhorn.io "$lh_node" --ignore-not-found=true || true
+    else
+      log "Longhorn node $lh_node is stale but still has replicas=$remaining_replicas engines=$engine_count; waiting"
+    fi
+  done < <(printf '%s' "$nodes_json" | jq -r '.items[]?.metadata.name')
+}
+
 wait_for_longhorn_healthy() {
   if ! longhorn_available; then
     log "Longhorn CRDs or namespace not found; skipping Longhorn health wait"
@@ -311,6 +428,8 @@ wait_for_longhorn_healthy() {
   while (( SECONDS < deadline )); do
     local volumes_json replicas_json nodes_json
     local unhealthy_volumes failed_replicas unready_nodes
+
+    cleanup_stale_longhorn_nodes || true
 
     volumes_json="$(kubectl -n longhorn-system get volumes.longhorn.io -o json)"
     replicas_json="$(kubectl -n longhorn-system get replicas.longhorn.io -o json)"
