@@ -75,6 +75,8 @@ spec:
     grafana:
       enabled: true
       replicas: 1
+      # Grafana uses a single RWO PVC. Avoid surge pods so upgrades do not
+      # try to attach the same volume to two pods at once.
       deploymentStrategy:
         type: RollingUpdate
         rollingUpdate:

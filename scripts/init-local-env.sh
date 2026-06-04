@@ -41,9 +41,8 @@ cd "$REPO_ROOT"
 
 if [[ ! -f .env ]]; then
   echo "Missing .env" >&2
-  echo "Create it from the example first:" >&2
-  echo "  cp .env.example .env" >&2
-  echo "  \$EDITOR .env" >&2
+  echo "Create a local .env with the required values before running this command." >&2
+  echo "The expected variables are validated below and documented in the template repository." >&2
   exit 1
 fi
 

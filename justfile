@@ -261,7 +261,6 @@ pr branch msg:
     fi
 
     if grep -q "Pull request is in clean status" "$merge_error"; then
-      cat "$merge_error" >&2
       rm -f "$merge_error"
       gh pr merge --squash --delete-branch
       exit 0
