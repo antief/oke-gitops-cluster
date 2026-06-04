@@ -76,8 +76,10 @@ spec:
       enabled: true
       replicas: 1
       deploymentStrategy:
-        type: Recreate
-        rollingUpdate: null
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 0
+          maxUnavailable: 1
       ingress:
         enabled: false
       grafana.ini:
