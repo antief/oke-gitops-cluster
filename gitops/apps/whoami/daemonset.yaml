@@ -1,16 +1,14 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: whoami
   namespace: whoami
 spec:
-  replicas: 1
   revisionHistoryLimit: 2
-  strategy:
+  updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: whoami
@@ -20,6 +18,7 @@ spec:
         app: whoami
     spec:
       automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 10
       containers:
         - name: whoami
           # renovate: datasource=docker depName=traefik/whoami
