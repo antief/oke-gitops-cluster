@@ -21,6 +21,7 @@ spec:
         annotations:
           oci.oraclecloud.com/load-balancer-type: "nlb"
           oci-network-load-balancer.oraclecloud.com/external-ip-only: "true"
+          oci-network-load-balancer.oraclecloud.com/node-label-selector: "gateway-ready=true"
           oci-network-load-balancer.oraclecloud.com/is-preserve-source: "false"
           oci-network-load-balancer.oraclecloud.com/is-instant-failover-enabled: "true"
           oci-network-load-balancer.oraclecloud.com/health-check-interval: "10000"
