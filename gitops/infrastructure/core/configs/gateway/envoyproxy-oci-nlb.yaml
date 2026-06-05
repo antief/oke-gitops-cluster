@@ -23,7 +23,7 @@ spec:
           oci-network-load-balancer.oraclecloud.com/external-ip-only: "true"
           oci-network-load-balancer.oraclecloud.com/is-preserve-source: "false"
           oci-network-load-balancer.oraclecloud.com/is-instant-failover-enabled: "true"
-          oci-network-load-balancer.oraclecloud.com/health-check-interval: "3000"
+          oci-network-load-balancer.oraclecloud.com/health-check-interval: "10000"
           oci-network-load-balancer.oraclecloud.com/health-check-timeout: "1000"
           oci-network-load-balancer.oraclecloud.com/health-check-retries: "1"
 
