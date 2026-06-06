@@ -51,12 +51,8 @@ spec:
         - name: public
           namespace: envoy-gateway-system
           sectionName: https
-        - name: public
-          namespace: envoy-gateway-system
-          sectionName: https-apex
       hostnames:
         - blog.${BASE_DOMAIN}
-        - ${BASE_DOMAIN}
       matches:
         - path:
             type: PathPrefix
