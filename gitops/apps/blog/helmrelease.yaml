@@ -46,17 +46,7 @@ spec:
         memory: 128Mi
 
     gateway:
-      enabled: true
-      parentRefs:
-        - name: public
-          namespace: envoy-gateway-system
-          sectionName: https
-      hostnames:
-        - blog.${BASE_DOMAIN}
-      matches:
-        - path:
-            type: PathPrefix
-            value: /
+      enabled: false
 
     podDisruptionBudget:
       enabled: true

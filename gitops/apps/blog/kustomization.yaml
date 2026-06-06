@@ -5,3 +5,4 @@ resources:
   - gitrepository.yaml
   - helmrelease.yaml
   - httproute-apex.yaml
+  - httproute-redirects.yaml
