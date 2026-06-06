@@ -3,6 +3,8 @@ kind: HTTPRoute
 metadata:
   name: blog-apex
   namespace: blog
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: ${BASE_DOMAIN}
 spec:
   parentRefs:
     - name: public
