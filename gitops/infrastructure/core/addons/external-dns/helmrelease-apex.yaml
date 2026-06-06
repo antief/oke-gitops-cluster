@@ -45,7 +45,6 @@ spec:
     txtPrefix: "external-dns-%{record_type}."
     managedRecordTypes:
       - A
-      - TXT
     interval: 1m
 
     env:
