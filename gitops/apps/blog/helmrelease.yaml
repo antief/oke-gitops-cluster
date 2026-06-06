@@ -1,0 +1,63 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: blog
+  namespace: flux-system
+spec:
+  interval: 15m
+  targetNamespace: blog
+
+  chart:
+    spec:
+      chart: ./helm/personal-blog
+      sourceRef:
+        kind: GitRepository
+        name: hanhela-org
+        namespace: flux-system
+      reconcileStrategy: Revision
+      interval: 1h
+
+  install:
+    remediation:
+      retries: 3
+
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+
+  values:
+    fullnameOverride: blog
+    replicaCount: 2
+
+    image:
+      repository: ghcr.io/antief/hanhela.org
+      tag: main
+      # The main tag is mutable during the initial bootstrap phase. Use an
+      # immutable sha-* tag later if you want fully pinned production releases.
+      pullPolicy: Always
+
+    resources:
+      requests:
+        cpu: 10m
+        memory: 48Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+    gateway:
+      enabled: true
+      parentRefs:
+        - name: public
+          namespace: envoy-gateway-system
+          sectionName: https
+      hostnames:
+        - blog.${BASE_DOMAIN}
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
