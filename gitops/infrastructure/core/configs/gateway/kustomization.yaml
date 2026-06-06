@@ -5,3 +5,4 @@ resources:
   - gatewayclass.yaml
   - gateway-public.yaml
   - httproute-http-redirect.yaml
+  - certificate-apex.yaml
