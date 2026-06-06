@@ -1,0 +1,10 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: hanhela-org
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://github.com/antief/hanhela.org.git
+  ref:
+    branch: main
