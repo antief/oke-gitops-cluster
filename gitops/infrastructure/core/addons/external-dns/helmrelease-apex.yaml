@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: external-dns
+  name: external-dns-apex
   namespace: flux-system
 spec:
   interval: 15m
@@ -26,20 +26,26 @@ spec:
       retries: 3
 
   values:
+    fullnameOverride: external-dns-apex
+
     provider:
       name: cloudflare
 
     sources:
       - gateway-httproute
 
-    labelFilter: "external-dns-scope!=apex"
+    labelFilter: "external-dns-scope=apex"
 
     domainFilters:
       - "${BASE_DOMAIN}"
 
     policy: sync
     registry: txt
-    txtOwnerId: "${EXTERNAL_DNS_TXT_OWNER_ID}"
+    txtOwnerId: "${EXTERNAL_DNS_TXT_OWNER_ID}-apex"
+    txtPrefix: "external-dns-%{record_type}."
+    managedRecordTypes:
+      - A
+      - TXT
     interval: 1m
 
     env:
