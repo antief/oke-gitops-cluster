@@ -3,6 +3,8 @@ kind: HTTPRoute
 metadata:
   name: blog-apex
   namespace: blog
+  labels:
+    external-dns-scope: apex
 spec:
   parentRefs:
     - name: public
