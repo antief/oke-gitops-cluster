@@ -46,7 +46,44 @@ spec:
         memory: 128Mi
 
     gateway:
-      enabled: false
+      enabled: true
+      routes:
+        - name: apex
+          labels:
+            external-dns-scope: apex
+          parentRefs:
+            - name: public
+              namespace: envoy-gateway-system
+              sectionName: https-apex
+          hostnames:
+            - ${BASE_DOMAIN}
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
+
+        - name: redirects
+          parentRefs:
+            - name: public
+              namespace: envoy-gateway-system
+              sectionName: http
+            - name: public
+              namespace: envoy-gateway-system
+              sectionName: https
+          hostnames:
+            - blog.${BASE_DOMAIN}
+            - www.${BASE_DOMAIN}
+          rules:
+            - matches:
+                - path:
+                    type: PathPrefix
+                    value: /
+              filters:
+                - type: RequestRedirect
+                  requestRedirect:
+                    scheme: https
+                    hostname: ${BASE_DOMAIN}
+                    statusCode: 301
 
     podDisruptionBudget:
       enabled: true
